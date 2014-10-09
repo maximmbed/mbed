@@ -1825,6 +1825,15 @@
         "release_versions": ["2", "5"],
         "device_name": "max326000x85"
     },
+    "MAX32600EVKIT": {
+        "inherits": ["Target"],
+        "core": "Cortex-M3",
+        "macros": ["__SYSTEM_HFX=8000000"],
+        "extra_labels": ["Maxim", "MAX32600"],
+        "supported_toolchains": ["GCC_ARM", "IAR", "ARM"],
+        "device_has": ["ANALOGIN", "ANALOGOUT", "ERROR_PATTERN", "I2C", "INTERRUPTIN", "LOWPOWERTIMER", "PORTIN", "PORTINOUT", "PORTOUT", "PWMOUT", "RTC", "SERIAL", "SERIAL_FC", "SLEEP", "SPI", "STDIO_MESSAGES"],
+        "release_versions": ["2", "5"]
+    },
     "MAX32620HSP": {
         "inherits": ["Target"],
         "core": "Cortex-M4F",
@@ -1832,6 +1841,22 @@
         "supported_toolchains": ["GCC_ARM", "IAR", "ARM"],
         "device_has": ["ANALOGIN", "ERROR_PATTERN", "I2C", "INTERRUPTIN", "LOWPOWERTIMER", "PORTIN", "PORTINOUT", "PORTOUT", "PWMOUT", "RTC", "SERIAL", "SERIAL_FC", "SLEEP", "SPI", "SPI_ASYNCH", "STDIO_MESSAGES"],
         "features": ["BLE"],
+        "release_versions": ["2", "5"]
+    },
+    "MAX32620MBED": {
+        "inherits": ["Target"],
+        "core": "Cortex-M4F",
+        "extra_labels": ["Maxim", "MAX32620"],
+        "supported_toolchains": ["GCC_ARM", "IAR", "ARM"],
+        "device_has": ["ANALOGIN", "ERROR_PATTERN", "I2C", "INTERRUPTIN", "LOWPOWERTIMER", "PORTIN", "PORTINOUT", "PORTOUT", "PWMOUT", "RTC", "SERIAL", "SERIAL_FC", "SLEEP", "SPI", "SPI_ASYNCH", "STDIO_MESSAGES"],
+        "release_versions": ["2", "5"]
+    },
+    "MAX32620EVKIT": {
+        "inherits": ["Target"],
+        "core": "Cortex-M4F",
+        "extra_labels": ["Maxim", "MAX32620"],
+        "supported_toolchains": ["GCC_ARM", "IAR", "ARM"],
+        "device_has": ["ANALOGIN", "ERROR_PATTERN", "I2C", "INTERRUPTIN", "LOWPOWERTIMER", "PORTIN", "PORTINOUT", "PORTOUT", "PWMOUT", "RTC", "SERIAL", "SERIAL_FC", "SLEEP", "SPI", "SPI_ASYNCH", "STDIO_MESSAGES"],
         "release_versions": ["2", "5"]
     },
     "MAX32625MBED": {
@@ -1850,6 +1875,15 @@
         "extra_labels": ["Maxim", "MAX32625"],
         "supported_toolchains": ["GCC_ARM", "IAR", "ARM"],
         "device_has": ["ANALOGIN", "ERROR_RED", "I2C", "INTERRUPTIN", "LOWPOWERTIMER", "PORTIN", "PORTINOUT", "PORTOUT", "PWMOUT", "RTC", "SERIAL", "SERIAL_FC", "SLEEP", "SPI", "STDIO_MESSAGES"],
+        "release_versions": ["2", "5"]
+    },
+    "MAX32625EVKIT": {
+        "inherits": ["Target"],
+        "core": "Cortex-M4F",
+        "macros": ["__SYSTEM_HFX=96000000","TARGET=MAX32625","TARGET_REV=0x4132"],
+        "extra_labels": ["Maxim", "MAX32625"],
+        "supported_toolchains": ["GCC_ARM", "ARM"],
+        "device_has": ["ANALOGIN", "ERROR_PATTERN", "I2C", "INTERRUPTIN", "LOWPOWERTIMER", "PORTIN", "PORTINOUT", "PORTOUT", "PWMOUT", "RTC", "SERIAL", "SERIAL_FC", "SLEEP", "SPI", "STDIO_MESSAGES"],
         "release_versions": ["2", "5"]
     },
     "EFM32": {

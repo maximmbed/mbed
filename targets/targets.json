@@ -2015,6 +2015,15 @@
         "features": ["BLE"],
         "release_versions": ["2", "5"]
     },
+    "MAX35103EVKIT2": {
+        "inherits": ["Target"],
+        "core": "Cortex-M4F",
+        "macros": ["__SYSTEM_HFX=96000000","TARGET=MAX32620","TARGET_REV=0x4332","OPEN_DRAIN_LEDS"],
+        "extra_labels": ["Maxim", "MAX32620C"],
+        "supported_toolchains": ["GCC_ARM", "IAR", "ARM"],
+        "device_has": ["ANALOGIN", "ERROR_PATTERN", "I2C", "INTERRUPTIN", "LOWPOWERTIMER", "PORTIN", "PORTINOUT", "PORTOUT", "PWMOUT", "RTC", "SERIAL", "SERIAL_FC", "SLEEP", "SPI", "STDIO_MESSAGES"],
+        "release_versions": ["2", "5"]
+    },
     "MAX32620EVKIT": {
         "inherits": ["Target"],
         "core": "Cortex-M4F",

@@ -382,6 +382,82 @@ int UART_Read(mxc_uart_regs_t *uart, uint8_t* data, int len, int *num)
 }
 
 /* ************************************************************************* */
+int UART_Read2(mxc_uart_regs_t *uart, uint8_t* data, int len, int *num)
+{
+	// This function is based on UART_Read() but will return if no bytes are 
+	// available in the uart instead of waiting indefinately.
+
+    int num_local, remain, uart_num;
+    mxc_uart_fifo_regs_t *fifo;
+
+    uart_num = MXC_UART_GET_IDX(uart);
+    MXC_ASSERT(uart_num >= 0);
+    
+    if(data == NULL) {
+        return E_NULL_PTR;
+    }
+
+    // Make sure the UART has been initialized
+    if(!(uart->ctrl & MXC_F_UART_CTRL_UART_EN)) {
+        return E_UNINITIALIZED;
+    }
+
+    if(!(len > 0)) {
+        return E_NO_ERROR;
+    }
+
+    // Lock this UART from reading
+    while(mxc_get_lock((uint32_t*)&rx_states[uart_num], 1) != E_NO_ERROR) {}
+
+    // Get the FIFO for this UART
+    fifo = MXC_UART_GET_FIFO(uart_num);
+
+    num_local = 0;
+    remain = len;
+	
+    while(remain && (uart->rx_fifo_ctrl & MXC_F_UART_RX_FIFO_CTRL_FIFO_ENTRY) && !(uart->intfl & UART_ERRORS))
+	{
+            data[num_local] = fifo->rx;
+            num_local++;
+			remain--;
+    }	
+    // Save the number of bytes read if pointer is valid
+    if(num != NULL) {
+        *num = num_local;
+    }
+
+    // Check for errors
+    if(uart->intfl & MXC_F_UART_INTFL_RX_FIFO_OVERFLOW) {
+
+        // Clear errors and return error code
+        uart->intfl = UART_ERRORS;
+
+
+        // Unlock this UART to read
+        mxc_free_lock((uint32_t*)&rx_states[uart_num]);
+
+        return E_OVERFLOW;
+
+    } else if(uart->intfl & (MXC_F_UART_INTFL_RX_FRAMING_ERR |
+                             MXC_F_UART_INTFL_RX_PARITY_ERR)) {
+
+        // Clear errors and return error code
+        uart->intfl = UART_ERRORS;
+
+
+        // Unlock this UART to read
+        mxc_free_lock((uint32_t*)&rx_states[uart_num]);
+
+        return E_COMM_ERR;
+    }
+
+    // Unlock this UART to read
+    mxc_free_lock((uint32_t*)&rx_states[uart_num]);
+
+    return num_local;
+}
+
+/* ************************************************************************* */
 int UART_WriteAsync(mxc_uart_regs_t *uart, uart_req_t *req)
 {
     int uart_num = MXC_UART_GET_IDX(uart);

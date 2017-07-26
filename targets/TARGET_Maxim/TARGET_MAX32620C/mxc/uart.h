@@ -183,6 +183,18 @@ int UART_Write(mxc_uart_regs_t *uart, uint8_t* data, int len);
  *             unsuccessful.
  */
 int UART_Read(mxc_uart_regs_t *uart, uint8_t* data, int len, int *num);
+
+/**
+ * @brief      Read available UART data and return immediately
+ * @param      uart  Pointer to the UART registers.
+ * @param      data  Pointer to buffer to save the data read.
+ * @param      len   Number of bytes to read.
+ * @param      num   Pointer to store the number of bytes actually read, pass NULL if not needed.
+ *
+ * @return     Number of bytes read, @ref MXC_Error_Codes "error" if
+ *             unsuccessful.
+ */
+int UART_Read2(mxc_uart_regs_t *uart, uint8_t* data, int len, int *num);
 /** @} */
 /**
  * @ingroup uart_async

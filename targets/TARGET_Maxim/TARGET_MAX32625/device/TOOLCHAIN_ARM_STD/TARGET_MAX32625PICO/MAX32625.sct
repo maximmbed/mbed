@@ -1,9 +1,9 @@
 ; MAX32625
-; 512KB FLASH (0x70000) @ 0x000010000
+; 512KB FLASH (0x80000) @ 0x000000000
 ; 160KB RAM (0x28000) @ 0x20000000
 
-LR_IROM1 0x000010000 0x70000  {    ; load region size_region
-    ER_IROM1 0x000010000 0x70000  {  ; load address = execution address 
+LR_IROM1 0x000000000 0x80000  {    ; load region size_region
+    ER_IROM1 0x000000000 0x80000  {  ; load address = execution address
         *.o (RESET, +First)
         *(InRoot$$Sections)
         .ANY (+RO)

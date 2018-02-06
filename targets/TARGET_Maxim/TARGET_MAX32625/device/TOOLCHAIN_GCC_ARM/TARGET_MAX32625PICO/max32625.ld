@@ -33,7 +33,7 @@
 
 MEMORY
 {
-    FLASH (rx) : ORIGIN = 0x00010000, LENGTH = 0x00070000
+    FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 0x00080000
     RAM  (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00028000
 }
 
@@ -41,7 +41,7 @@ MEMORY
  * with other linker script that defines memory regions FLASH and RAM.
  * It references following symbols, which must be defined in code:
  *   Reset_Handler : Entry of reset handler
- * 
+ *
  * It defines following symbols, which code can use without definition:
  *   __exidx_start
  *   __exidx_end

@@ -30,67 +30,59 @@
  * ownership rights.
  *******************************************************************************
  */
-#include "mbed_assert.h"
-#include "analogin_api.h"
-#include "adc.h"
-#include "pinmap.h"
-#include "PeripheralPins.h"
 
-#define ADC_FULL_SCALE            0x3FFU
-#define INT_FULL_SCALE            0xFFFFU
-#define FLOAT_FULL_SCALE          1.0f
+#ifndef MBED_PERIPHERALNAMES_H
+#define MBED_PERIPHERALNAMES_H
 
-static int initialized = 0;
+#include "cmsis.h"
 
-//******************************************************************************
-void analogin_init(analogin_t *obj, PinName pin)
-{
-    // Make sure pin is an analog pin we can use for ADC
-    MBED_ASSERT((ADCName)pinmap_peripheral(pin, PinMap_ADC) != (ADCName)NC);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-    // Set the object pointer and channel encoding
-    obj->adc = MXC_ADC;
-    obj->channel = pinmap_find_function(pin, PinMap_ADC);
+typedef enum {
+    UART_0 = MXC_BASE_UART0,
+    UART_1 = MXC_BASE_UART1,
+    UART_2 = MXC_BASE_UART2,
+    STDIO_UART = UART_1
+} UARTName;
 
-    if (!initialized) {
-        MBED_ASSERT(ADC_Init() == E_NO_ERROR);
-        initialized = 1;
-    }
+typedef enum {
+    I2C_0 = MXC_BASE_I2CM0,
+    I2C_1 = MXC_BASE_I2CM1
+} I2CName;
+
+typedef enum {
+    SPI_0 = MXC_BASE_SPIM0,
+    SPI_1 = MXC_BASE_SPIM1,
+    SPI_2 = MXC_BASE_SPIM2
+} SPIName;
+
+typedef enum {
+    PWM_0 = MXC_BASE_PT0,
+    PWM_1 = MXC_BASE_PT1,
+    PWM_2 = MXC_BASE_PT2,
+    PWM_3 = MXC_BASE_PT3,
+    PWM_4 = MXC_BASE_PT4,
+    PWM_5 = MXC_BASE_PT5,
+    PWM_6 = MXC_BASE_PT6,
+    PWM_7 = MXC_BASE_PT7,
+    PWM_8 = MXC_BASE_PT8,
+    PWM_9 = MXC_BASE_PT9,
+    PWM_10 = MXC_BASE_PT10,
+    PWM_11 = MXC_BASE_PT11,
+    PWM_12 = MXC_BASE_PT12,
+    PWM_13 = MXC_BASE_PT13,
+    PWM_14 = MXC_BASE_PT14,
+    PWM_15 = MXC_BASE_PT15
+} PWMName;
+
+typedef enum {
+    ADC = MXC_BASE_ADC
+} ADCName;
+
+#ifdef __cplusplus
 }
+#endif
 
-//******************************************************************************
-float analogin_read(analogin_t *obj)
-{
-    uint16_t tmp;
-    float result;
-
-    // Start conversion with no input scaling and no input buffer bypass
-    ADC_StartConvert(obj->channel, 1, 0);
-
-    if (ADC_GetData(&tmp) == E_OVERFLOW) {
-        result = FLOAT_FULL_SCALE;
-    } else {
-        result = (float)tmp * (FLOAT_FULL_SCALE / (float)ADC_FULL_SCALE);
-    }
-
-    return result;
-}
-
-//******************************************************************************
-uint16_t analogin_read_u16(analogin_t *obj)
-{
-    uint16_t tmp;
-    uint16_t result;
-
-    // Start conversion with no input scaling and no input buffer bypass
-    ADC_StartConvert(obj->channel, 1, 0);
-
-    if (ADC_GetData(&tmp) == E_OVERFLOW) {
-        result = INT_FULL_SCALE;
-    } else {
-        result = ((tmp << 6) & 0xFFC0) | ((tmp >> 4) & 0x003F);
-    }
-
-    return result;
-}
-
+#endif

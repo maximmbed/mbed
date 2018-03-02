@@ -66,19 +66,14 @@ typedef enum {
     LED1 = P2_4,
     LED2 = P2_5,
     LED3 = P2_6,
-    LED4 = P2_7,
     LED_RED = LED1,
     LED_GREEN = LED2,
     LED_BLUE = LED3,
 
     // Push button
-    SW1 = P4_2,
-    SW2 = P4_3,
-    SW3 = P4_4,
+    SW1 = P2_7,
     // Standardized button names
     BUTTON1 = SW1,
-    BUTTON2 = SW2,
-    BUTTON3 = SW3,
 
     // USB bridge connected UART pins
     USBTX = P2_1,
@@ -101,8 +96,6 @@ typedef enum {
 
     UART1_RX  = P2_0,
     UART1_TX  = P2_1,
-    UART1_CTS = P2_2,
-    UART1_RTS = P2_3,
 
     UART2_RX  = P3_0,
     UART2_TX  = P3_1,

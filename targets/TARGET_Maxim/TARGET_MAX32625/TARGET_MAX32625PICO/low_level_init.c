@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (C) 2016 Maxim Integrated Products, Inc., All Rights Reserved.
+ * Copyright (C) 2017 Maxim Integrated Products, Inc., All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,67 +30,27 @@
  * ownership rights.
  *******************************************************************************
  */
-#include "mbed_assert.h"
-#include "analogin_api.h"
-#include "adc.h"
-#include "pinmap.h"
-#include "PeripheralPins.h"
-
-#define ADC_FULL_SCALE            0x3FFU
-#define INT_FULL_SCALE            0xFFFFU
-#define FLOAT_FULL_SCALE          1.0f
-
-static int initialized = 0;
-
+ 
+#include "cmsis.h"
+#include "ioman_regs.h"
+#include "gpio_regs.h"
+ 
 //******************************************************************************
-void analogin_init(analogin_t *obj, PinName pin)
+// This function will get called early in system initialization
+void low_level_init(void)
 {
-    // Make sure pin is an analog pin we can use for ADC
-    MBED_ASSERT((ADCName)pinmap_peripheral(pin, PinMap_ADC) != (ADCName)NC);
+    /* The MAX32625PICO board utilizes a bootloader that can leave some 
+     * peripherals in a partially configured state.  This function resets
+     * those to allow proper initialization.
+     */
+    MXC_IOMAN->uart0_req = 0x0;         // Clear any requests
+    MXC_IOMAN->uart1_req = 0x0;         // Clear any requests
 
-    // Set the object pointer and channel encoding
-    obj->adc = MXC_ADC;
-    obj->channel = pinmap_find_function(pin, PinMap_ADC);
+    MXC_GPIO->inten[2] = 0x0;           // Clear interrupt enable
+    MXC_GPIO->int_mode[2] = 0x0;        // Clear interrupt mode
+    MXC_GPIO->in_mode[2] = 0x22222222;  // Clear input mode
+    MXC_GPIO->out_val[2] = 0x0;  // Clear output value
+    MXC_GPIO->out_mode[2] = 0xFFFFFFFF;  // Clear output mode
+    
 
-    if (!initialized) {
-        MBED_ASSERT(ADC_Init() == E_NO_ERROR);
-        initialized = 1;
-    }
 }
-
-//******************************************************************************
-float analogin_read(analogin_t *obj)
-{
-    uint16_t tmp;
-    float result;
-
-    // Start conversion with no input scaling and no input buffer bypass
-    ADC_StartConvert(obj->channel, 1, 0);
-
-    if (ADC_GetData(&tmp) == E_OVERFLOW) {
-        result = FLOAT_FULL_SCALE;
-    } else {
-        result = (float)tmp * (FLOAT_FULL_SCALE / (float)ADC_FULL_SCALE);
-    }
-
-    return result;
-}
-
-//******************************************************************************
-uint16_t analogin_read_u16(analogin_t *obj)
-{
-    uint16_t tmp;
-    uint16_t result;
-
-    // Start conversion with no input scaling and no input buffer bypass
-    ADC_StartConvert(obj->channel, 1, 0);
-
-    if (ADC_GetData(&tmp) == E_OVERFLOW) {
-        result = INT_FULL_SCALE;
-    } else {
-        result = ((tmp << 6) & 0xFFC0) | ((tmp >> 4) & 0x003F);
-    }
-
-    return result;
-}
-

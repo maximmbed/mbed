@@ -47,6 +47,7 @@ static uint32_t ticks_per_us;
 static uint32_t tick_win;
 static volatile uint64_t current_cnt;   // Hold the current ticks
 static volatile uint64_t event_cnt;     // Holds the value of the next event
+static volatile int forced = 0;         // Flag for forced interrupt
 
 #define MAX_TICK_VAL    ((uint64_t)0xFFFFFFFF * ticks_per_us)
 
@@ -97,6 +98,18 @@ static inline uint64_t event_diff(uint64_t current, uint64_t event)
 //******************************************************************************
 static void tmr_handler(void)
 {
+    if (forced) {
+        do {
+            forced = 0;
+            us_ticker_irq_handler();
+        } while (forced);
+
+        NVIC_ClearPendingIRQ(US_TIMER_IRQn);
+        if (!TMR32_GetFlag(US_TIMER)) {
+            return;
+        }
+    }
+
     uint32_t cmp = TMR32_GetCompare(US_TIMER);
     TMR32_SetCompare(US_TIMER, 0xFFFFFFFF); // reset to max value to prevent further interrupts
     if (TMR32_GetFlag(US_TIMER)) {
@@ -250,6 +263,7 @@ void us_ticker_set_interrupt(timestamp_t timestamp)
 //******************************************************************************
 void us_ticker_fire_interrupt(void)
 {
+    forced = 1;
     NVIC_SetPendingIRQ(US_TIMER_IRQn);
 }
 

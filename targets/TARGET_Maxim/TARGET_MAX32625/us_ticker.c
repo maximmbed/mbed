@@ -59,7 +59,7 @@ void us_ticker_init(void)
 
     cfg.mode = US_TIMER_MODE;
     cfg.polarity = TMR_POLARITY_UNUSED;
-    cfg.compareCount = -1;
+    cfg.compareCount = UINT32_MAX;
 
     TMR_Init(US_TIMER, US_TIMER_PRESCALE, NULL);
     TMR32_Config(US_TIMER, &cfg);
@@ -80,7 +80,7 @@ uint32_t us_ticker_read(void)
         us_ticker_init();
     }
 
-    return TMR32_GetCount(FR_TIMER);
+    return FR_TIMER->count32;
 }
 
 //******************************************************************************

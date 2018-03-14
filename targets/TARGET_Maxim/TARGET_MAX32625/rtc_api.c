@@ -37,7 +37,7 @@
 #include "lp.h"
 
 // LOG2 for 32-bit powers of 2
-#define LOG2_1(n) (((n) >= 2) ? 1 : 0)
+#define LOG2_1(n) (((n) >= (1 <<  1)) ? 1 : 0)
 #define LOG2_2(n) (((n) >= (1 <<  2)) ? ( 2 + (LOG2_1((n) >>  2))) : LOG2_1(n))
 #define LOG2_4(n) (((n) >= (1 <<  4)) ? ( 4 + (LOG2_2((n) >>  4))) : LOG2_2(n))
 #define LOG2_8(n) (((n) >= (1 <<  8)) ? ( 8 + (LOG2_4((n) >>  8))) : LOG2_4(n))
@@ -176,13 +176,13 @@ void lp_ticker_set_interrupt(timestamp_t timestamp)
 }
 
 //******************************************************************************
-inline void lp_ticker_disable_interrupt(void)
+void lp_ticker_disable_interrupt(void)
 {
     RTC_DisableINT(MXC_F_RTC_INTEN_COMP0);
 }
 
 //******************************************************************************
-inline void lp_ticker_clear_interrupt(void)
+void lp_ticker_clear_interrupt(void)
 {
     RTC_ClearFlags(MXC_F_RTC_FLAGS_ASYNC_CLR_FLAGS);
 }

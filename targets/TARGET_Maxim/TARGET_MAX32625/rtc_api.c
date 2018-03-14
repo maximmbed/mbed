@@ -36,45 +36,30 @@
 #include "rtc.h"
 #include "lp.h"
 
+// LOG2 for 32-bit powers of 2
+#define LOG2_1(n) (((n) >= 2) ? 1 : 0)
+#define LOG2_2(n) (((n) >= (1 <<  2)) ? ( 2 + (LOG2_1((n) >>  2))) : LOG2_1(n))
+#define LOG2_4(n) (((n) >= (1 <<  4)) ? ( 4 + (LOG2_2((n) >>  4))) : LOG2_2(n))
+#define LOG2_8(n) (((n) >= (1 <<  8)) ? ( 8 + (LOG2_4((n) >>  8))) : LOG2_4(n))
+#define LOG2(n)   (((n) >= (1 << 16)) ? (16 + (LOG2_8((n) >> 16))) : LOG2_8(n))
 
 #define LP_TIMER_FREQ_HZ  4096
-#define LP_TIMER_PRESCALE (RTC_PRESCALE_DIV_2_0)
+#define LP_TIMER_PRESCALE RTC_PRESCALE_DIV_2_0
 #define LP_TIMER_RATE_HZ  (LP_TIMER_FREQ_HZ >> LP_TIMER_PRESCALE)
 #define LP_TIMER_WIDTH    32
 
-static int rtc_inited = 0;
-
-
-//******************************************************************************
-void overflow_handler(void)
-{
-    MXC_RTCTMR->comp[1] += (0xFFFFFFFFU / LP_TIMER_RATE_HZ) + 1;
-    RTC_ClearFlags(MXC_F_RTC_FLAGS_ASYNC_CLR_FLAGS);
-}
+static volatile int rtc_inited = 0;
+static volatile int lp_ticker_inited = 0;
 
 //******************************************************************************
-void rtc_init(void)
+static void init_rtc(void)
 {
-    if (rtc_inited) {
-        return;
-    }
-    rtc_inited = 1;
-
     /* Enable power for RTC for all LPx states */
     MXC_PWRSEQ->reg0 |= (MXC_F_PWRSEQ_REG0_PWR_RTCEN_RUN |
                          MXC_F_PWRSEQ_REG0_PWR_RTCEN_SLP);
 
     /* Enable clock to synchronizers */
     CLKMAN_SetClkScale(CLKMAN_CLK_SYNC, CLKMAN_SCALE_DIV_1);
-
-    // Prepare interrupt handlers
-    NVIC_SetVector(RTC0_IRQn, (uint32_t)lp_ticker_irq_handler);
-    NVIC_EnableIRQ(RTC0_IRQn);
-    NVIC_SetVector(RTC3_IRQn, (uint32_t)overflow_handler);
-    NVIC_EnableIRQ(RTC3_IRQn);
-
-    // Enable wakeup on RTC overflow
-    LP_ConfigRTCWakeUp(0, 0, 0, 1);
 
     /* RTC registers are only reset on a power cycle. Do not reconfigure the RTC
      * if it is already running.
@@ -93,18 +78,45 @@ void rtc_init(void)
 }
 
 //******************************************************************************
+static void overflow_handler(void)
+{
+    MXC_RTCTMR->comp[1] += ((UINT32_MAX >> LOG2(LP_TIMER_RATE_HZ)) + 1);
+    RTC_ClearFlags(MXC_F_RTC_FLAGS_ASYNC_CLR_FLAGS);
+}
+
+//******************************************************************************
+void rtc_init(void)
+{
+    if (rtc_inited) {
+        return;
+    }
+
+    NVIC_SetVector(RTC3_IRQn, (uint32_t)overflow_handler);
+    NVIC_EnableIRQ(RTC3_IRQn);
+    // Enable wakeup on RTC overflow
+    LP_ConfigRTCWakeUp(lp_ticker_inited, 0, 0, 1);
+    init_rtc();
+    rtc_inited = 1;
+}
+
+//******************************************************************************
 void rtc_free(void)
 {
-    if (RTC_IsActive()) {
-        MXC_RTCTMR->ctrl |= MXC_F_RTC_CTRL_CLEAR;
-        RTC_Stop();
+    if (rtc_inited) {
+        rtc_inited = 0;
+        if (lp_ticker_inited) {
+            RTC_DisableINT(MXC_F_RTC_FLAGS_OVERFLOW);
+        } else {
+            MXC_RTCTMR->ctrl |= MXC_F_RTC_CTRL_CLEAR;
+            RTC_Stop();
+        }
     }
 }
 
 //******************************************************************************
 int rtc_isenabled(void)
 {
-    return RTC_IsActive();
+    return rtc_inited;
 }
 
 //******************************************************************************
@@ -114,7 +126,7 @@ void rtc_write(time_t t)
         rtc_init();
     }
 
-    MXC_RTCTMR->comp[1] = t - (RTC_GetCount() / LP_TIMER_RATE_HZ);
+    MXC_RTCTMR->comp[1] = t - (MXC_RTCTMR->timer >> LOG2(LP_TIMER_RATE_HZ));
 
     // Wait for pending transactions
     while (MXC_RTCTMR->ctrl & MXC_F_RTC_CTRL_PENDING);
@@ -123,19 +135,30 @@ void rtc_write(time_t t)
 //******************************************************************************
 time_t rtc_read(void)
 {
-    return (RTC_GetCount() / LP_TIMER_RATE_HZ) + MXC_RTCTMR->comp[1];
+    if (!rtc_inited) {
+        rtc_init();
+    }
+
+    return (MXC_RTCTMR->timer >> LOG2(LP_TIMER_RATE_HZ)) + MXC_RTCTMR->comp[1];
 }
 
 //******************************************************************************
 void lp_ticker_init(void)
 {
-    rtc_init();
+    if (lp_ticker_inited) {
+        return;
+    }
+
+    NVIC_SetVector(RTC0_IRQn, (uint32_t)lp_ticker_irq_handler);
+    NVIC_EnableIRQ(RTC0_IRQn);
+    init_rtc();
+    lp_ticker_inited = 1;
 }
 
 //******************************************************************************
 uint32_t lp_ticker_read(void)
 {
-    return RTC_GetCount();
+    return MXC_RTCTMR->timer;
 }
 
 //******************************************************************************
@@ -143,10 +166,10 @@ void lp_ticker_set_interrupt(timestamp_t timestamp)
 {
     MXC_RTCTMR->comp[0] = timestamp;
     MXC_RTCTMR->flags = MXC_F_RTC_FLAGS_ASYNC_CLR_FLAGS;
-    RTC_EnableINT(MXC_F_RTC_INTEN_COMP0);
+    MXC_RTCTMR->inten |= MXC_F_RTC_INTEN_COMP0;
 
-    // Enable wakeup from RTC
-    LP_ConfigRTCWakeUp(1, 0, 0, 1);
+    // Enable wakeup from RTC compare 0
+    LP_ConfigRTCWakeUp(1, 0, 0, rtc_inited);
 
     // Wait for pending transactions
     while (MXC_RTCTMR->ctrl & MXC_F_RTC_CTRL_PENDING);

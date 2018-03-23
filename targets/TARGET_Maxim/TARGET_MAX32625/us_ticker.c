@@ -38,12 +38,8 @@
 #define US_TIMER          MXC_TMR0
 #define US_TIMER_IRQn     TMR0_0_IRQn
 #define US_TIMER_PRESCALE TMR_PRESCALE_DIV_2_5
-#define US_TIMER_MODE     TMR32_MODE_ONE_SHOT
-
-#define FR_TIMER          MXC_TMR5
-#define FR_TIMER_PRESCALE US_TIMER_PRESCALE
-#define FR_TIMER_MODE     TMR32_MODE_CONTINUOUS
-#define FR_TIMER_WIDTH    32
+#define US_TIMER_MODE     TMR32_MODE_COMPARE
+#define US_TIMER_WIDTH    32
 
 static volatile int us_ticker_inited = 0;
 
@@ -65,12 +61,7 @@ void us_ticker_init(void)
     TMR32_Config(US_TIMER, &cfg);
     NVIC_SetVector(US_TIMER_IRQn, (uint32_t)us_ticker_irq_handler);
     NVIC_EnableIRQ(US_TIMER_IRQn);
-
-    cfg.mode = FR_TIMER_MODE;
-
-    TMR_Init(FR_TIMER, FR_TIMER_PRESCALE, NULL);
-    TMR32_Config(FR_TIMER, &cfg);
-    TMR32_Start(FR_TIMER);
+    TMR32_Start(US_TIMER);
 }
 
 //******************************************************************************
@@ -80,16 +71,18 @@ uint32_t us_ticker_read(void)
         us_ticker_init();
     }
 
-    return FR_TIMER->count32;
+    return US_TIMER->count32;
 }
 
 //******************************************************************************
 void us_ticker_set_interrupt(timestamp_t timestamp)
 {
-    US_TIMER->count32 = FR_TIMER->count32;
+    US_TIMER->ctrl = 0;
     US_TIMER->term_cnt32 = timestamp;
     US_TIMER->inten = MXC_F_TMR_INTEN_TIMER0;
-    US_TIMER->ctrl = MXC_F_TMR_CTRL_ENABLE0 | (US_TIMER_PRESCALE << MXC_F_TMR_CTRL_PRESCALE_POS);
+    US_TIMER->ctrl = MXC_F_TMR_CTRL_ENABLE0 |
+                     (US_TIMER_MODE << MXC_F_TMR_CTRL_MODE_POS) |
+                     (US_TIMER_PRESCALE << MXC_F_TMR_CTRL_PRESCALE_POS);
 }
 
 //******************************************************************************
@@ -114,8 +107,8 @@ void us_ticker_clear_interrupt(void)
 const ticker_info_t* us_ticker_get_info(void)
 {
     static const ticker_info_t info = {
-        RO_FREQ >> FR_TIMER_PRESCALE,
-        FR_TIMER_WIDTH
+        RO_FREQ >> US_TIMER_PRESCALE,
+        US_TIMER_WIDTH
     };
 
     return &info;

@@ -118,7 +118,7 @@ typedef enum {
     // LEDs
     LED_RED = P2_0,
     LED1 = LED_RED,
-    LED2 = NOT_CONNECTED,
+    LED2 = LED_RED,
     LED3 = NOT_CONNECTED,
     LED4 = NOT_CONNECTED,
 

@@ -191,8 +191,3 @@ const ticker_info_t *lp_ticker_get_info(void)
 
     return &info;
 }
-
-void lp_ticker_free(void)
-{
-
-}

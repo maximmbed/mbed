@@ -112,8 +112,3 @@ const ticker_info_t* us_ticker_get_info(void)
 
     return (const ticker_info_t *)&info;
 }
-
-void us_ticker_free(void)
-{
-
-}
